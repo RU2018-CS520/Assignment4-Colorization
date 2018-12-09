@@ -20,12 +20,13 @@ def load_cifar_train_data():
 
     for iter in range(1, 6):
         batch_file_name = 'cifar-10-batches-py/data_batch_' + str(iter)
-        batch_file = open(batch_file_name, 'r')
-        dict = pickle.load(batch_file)
+        print('Importing ' +  batch_file_name)
+        batch_file = open(batch_file_name, 'rb')
+        dict = pickle.load(batch_file, encoding='bytes')
         batch_file.close()
 
-        batch_images = dict['data']
-        batch_labels = dict['labels']
+        batch_images = dict[b'data']
+        batch_labels = dict[b'labels']
 
         train_images.append(batch_images)
         train_labels = np.append(train_labels, batch_labels)
@@ -43,13 +44,13 @@ def load_cifar_val_data():
     '''
 
     file_name = 'cifar-10-batches-py/test_batch'
-    file = open(file_name, 'r')
-    dict = pickle.load(file)
+    file = open(file_name, 'rb')
+    dict = pickle.load(file, encoding='bytes')
     file.close()
 
-    val_images = dict['data'] / 256.0
+    val_images = dict[b'data'] / 256.0
     val_images = val_images.reshape(val_images.shape[0], 3, 32, 32)
 
-    val_labels = np.array(dict['labels'])
+    val_labels = np.array(dict[b'labels'])
 
     return (val_images, val_labels)
