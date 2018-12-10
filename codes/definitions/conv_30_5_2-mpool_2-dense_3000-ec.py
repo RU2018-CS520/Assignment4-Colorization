@@ -63,13 +63,13 @@ def define_model(input_var, **kwargs):
     
     pre_unpool1 = layers.DenseLayer(
         incoming = dense1,
-        num_units = conv_filter_count * (image_size + conv_filter_size - 1) ** 2 / (pool_size * pool_size),
+        num_units = int(conv_filter_count * (image_size + conv_filter_size - 1) ** 2 / (pool_size * pool_size)),
         nonlinearity = lasagne.nonlinearities.linear,
     )
 
     pre_unpool1 = layers.ReshapeLayer(
         incoming = pre_unpool1, 
-        shape = (input_var.shape[0], conv_filter_count) + ((image_size + conv_filter_size - 1) / 2, (image_size + conv_filter_size - 1) / 2),
+        shape = (input_var.shape[0], conv_filter_count) + (int((image_size + conv_filter_size - 1) / 2), int((image_size + conv_filter_size - 1) / 2)),
     )
     
     unpool1 = our_layers.Unpool2DLayer(
@@ -106,7 +106,7 @@ def define_model(input_var, **kwargs):
         shape = input_var.shape
     )
     
-    return (output, layers.get_output(output))
+    return (output, layers.get_output(output)
 
 
 def get_cost_updates(network, input_var, output, learning_rate, **kwargs):

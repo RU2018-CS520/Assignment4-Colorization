@@ -51,12 +51,12 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
     '''
     build network
     target_var is output of validation network and is defined in definition file
-    output for train network is always layers.get_output(network)
+    output for train network is always output
     these two are separated, because train and val networks may differ from each other
     '''
-    network = definition.define_model(input_var)
-    #network = lasagne.layers.get_output(network)
-    #network, target_var = (layers.get_output(network))
+    network, output = definition.define_model(input_var)
+    #network = lasagne.output
+    #network, target_var = (output)
     
     # learning rate, constant 0.001 if not specified in advance
     if (hasattr(definition, 'lr_policy')):
@@ -85,7 +85,7 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
         lr_desc = "-lr_g_%f_%d_%f" %(lr_base, lr_step, lr_coef)
         
     # functions for train network
-    train_cost, train_updates = definition.get_cost_updates(network = network, input_var = input_var, output = layers.get_output(network), learning_rate = learning_rate,)
+    train_cost, train_updates = definition.get_cost_updates(network = network, input_var = input_var, output = output, learning_rate = learning_rate,)
     
     train = theano.function([index], train_cost, updates = train_updates, givens = {input_var: train_set_x[index * batch_size: (index + 1) * batch_size]})
     
@@ -95,9 +95,9 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
     #print(target_var)
     #print(type(target_var))
     #forward = theano.function(inputs = [input_var], outputs = target_var, on_unused_input = 'ignore')
-    forward = theano.function(inputs = [input_var], outputs = layers.get_output(network))
+    forward = theano.function(inputs = [input_var], outputs = output)
     
-    val_cost, val_updates = definition.get_cost_updates(network = network, input_var = input_var, output = layers.get_output(network), learning_rate = learning_rate)
+    val_cost, val_updates = definition.get_cost_updates(network = network, input_var = input_var, output = output, learning_rate = learning_rate)
     validation = theano.function([index], val_cost, givens = {input_var: val_set_x[index * batch_size: (index + 1) * batch_size]})
     
     

@@ -131,7 +131,7 @@ def define_model(input_var, **kwargs):
         shape = input_var.shape
     )
     
-    return output
+    return (output, layers.get_output(output))
 
 def get_cost_updates(network, input_var, output, learning_rate, **kwargs):
     """ 
