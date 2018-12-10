@@ -15,7 +15,8 @@ import lasagne.layers as layers
 #import cPickle as pickle
 import pickle
 from deep_learning_network_utilities import  tile_raster_images
-import random as rng
+import random
+#import random as rng
 
 def save_image_from_array(arr, file_name = 'image.png', directory = 'plots'):
     '''
@@ -55,8 +56,10 @@ def get_greyscale(images, random_greyscale = False, rng = None, rgb = False):
     cb = 0.11
     
     if (random_greyscale):
-        cr = rng.uniform(0.1, 0.8)
-        cg = rng.uniform(0.1, 0.9 - cr)
+        cr = random.uniform(0.1, 0.8)
+        cg = random.uniform(0.1, 0.9 - cr)
+        #cr = rng.uniform(0.1, 0.8)
+        #cg = rng.uniform(0.1, 0.9 - cr)
         cb = 1 - cr - cg
     
     cnt = images.shape[0]
@@ -98,11 +101,12 @@ def print_samples(images, forward, model_name, epoch, suffix = '', columns = 1, 
         all_images = np.concatenate([all_images, grey_images[index: (index + 1)]], axis = 0)
         all_images = np.concatenate([all_images, out_images[index:(index + 1)]], axis = 0)
     
-    R = all_images[..., 0, ..., ...]
-    G = all_images[..., 1, ..., ...]
-    B = all_images[..., 2, ..., ...]
+    print(all_images.shape)
+    R = all_images[:, 0, :, :]
+    G = all_images[:, 1, :, :]
+    B = all_images[:, 2, :, :]
     
-    all_images = tile_raster_images((R, G, B, None), (32, 32), (-(len(images) // columns), 3 * columns), tile_spacing = (1, 1))
+    all_images = tile_raster_images((R, G, B, None), (32, 32), ((len(images) // columns), 3 * columns), tile_spacing = (1, 1))
     
     image = Image.fromarray(all_images)
     
@@ -129,15 +133,15 @@ def plot_filters(filters, model_name, epoch, suffix = '', max_num_filters = 100,
     filters = filters.repeat(repeat, axis = 2).repeat(repeat, axis = 3)
     
     if (filters.shape[1] == 3):
-        R = filters[..., 0, ..., ...]
-        G = filters[..., 1, ..., ...]
-        B = filters[..., 2, ..., ...]
+        R = filters[:, 0, :, :]
+        G = filters[:, 1, :, :]
+        B = filters[:, 2, :, :]
     else:
-        R = filters[..., 0, ..., ...]
+        R = filters[:, 0, :, :]
         G = R
         B = R
     
-    filters = tile_raster_images((R, G, B, None), filters.shape[2:], (-(filters.shape[0] // columns), columns), tile_spacing = (2, 2))
+    filters = tile_raster_images((R, G, B, None), filters.shape[2:], ((filters.shape[0] // columns), columns), tile_spacing = (2, 2))
     image = Image.fromarray(filters)
     
     image_name = "epoch %d" % epoch
@@ -157,7 +161,7 @@ def save_model(network, epoch, model_name, learning_rate = 0.0, directory = 'mod
         os.makedirs(directory)
     
     with open(file_path, 'w') as save_file:
-        pickle.dump(obj = {'params': params, 'epoch': epoch, 'learning_rate': learning_rate, }, file = save_file, protocal = -1)
+        pickle.dump(obj = {'params': params, 'epoch': epoch, 'learning_rate': learning_rate, }, file = save_file, protocol = -1)
 
 
 def load_model(network, file_name, directory = 'models'):
@@ -170,11 +174,11 @@ def load_model(network, file_name, directory = 'models'):
     file_path = directory + '/' + file_name
     print("==> loading model from %s" % file_path)
     
-    with open(file_path, 'r') as load_file:
+    with open(file_path, 'rb') as load_file:
         dict = pickle.load(load_file)
         layers.set_all_param_values(network, dict['params'])
         
-        return {'epoch': dict['epoch'], 'learning_rate': dict['learning_rate']}
+    return {'epoch': dict['epoch'], 'learning_rate': dict['learning_rate']}
 
 
 

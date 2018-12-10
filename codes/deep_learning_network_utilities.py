@@ -75,7 +75,7 @@ def tile_raster_images(X, img_shape, tile_shape, tile_spacing = (0, 0),
                 # dtype
                 dt = out_array.dtype
                 if output_pixel_vals:
-                    dt = 'unit8'
+                    dt = 'uint8'
                 out_array[:, :, i] = np.zeros(out_shape, dtype = dt) + channel_defaults[i]
             else:
                 # use a recurrent call to compute the channel and store it in the output

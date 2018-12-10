@@ -35,8 +35,6 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
     val_set_x = load_cifar_val_data()[0].astype(theano.config.floatX)
     val_set_x = theano.shared(val_set_x, borrow = True)
     
-    print("==> dataset is loaded")
-    
     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.get_value(borrow = True).shape[0] / batch_size
     n_val_batches = val_set_x.get_value(borrow = True).shape[0] / batch_size
@@ -56,7 +54,9 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
     output for train network is always layers.get_output(network)
     these two are separated, because train and val networks may differ from each other
     '''
-    network, target_var = definition.define_model(input_var)
+    network = definition.define_model(input_var)
+    #network = lasagne.layers.get_output(network)
+    #network, target_var = (layers.get_output(network))
     
     # learning rate, constant 0.001 if not specified in advance
     if (hasattr(definition, 'lr_policy')):
@@ -67,34 +67,38 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
             lr_base = definition.lr_base
             lr_step = definition.lr_step
             lr_coef = definition.lr_coef
-        else:
-            lr_policy = 'constant'
-            lr_base = 0.001
+    else:
+        lr_policy = 'constant'
+        lr_base = 0.001
         
-        learning_rate = theano.shared(np.float32(lr_base))
+    learning_rate = theano.shared(np.float32(lr_base))
         
-        print("==> lr_policy = %s" % lr_policy)
+    print("==> lr_policy = %s" % lr_policy)
         
-        if (lr_policy == 'constant'):
-            print("\tbase_lr = %f" % lr_base)
-            lr_desc = "-lr_c %f" % lr_base
-        elif (lr_policy == 'geom'):
-            print("\tlr_base = %f" % lr_base)
-            print("\tlr_step = %d" % lr_step)
-            print("\tlr_coef = %f" % lr_coef)
-            lr_desc = "-lr_g_%f_%d_%f" %(lr_base, lr_step, lr_coef)
+    if (lr_policy == 'constant'):
+        print("\tbase_lr = %f" % lr_base)
+        lr_desc = "-lr_c %f" % lr_base
+    elif (lr_policy == 'geom'):
+        print("\tlr_base = %f" % lr_base)
+        print("\tlr_step = %d" % lr_step)
+        print("\tlr_coef = %f" % lr_coef)
+        lr_desc = "-lr_g_%f_%d_%f" %(lr_base, lr_step, lr_coef)
         
-        # functions for train network
-        train_cost, train_updates = definition.get_cost_updates(network = network, input_var = input_var, output = layers.get_output(network), learning_rate = learning_rate,)
-        
-        train = theano.function([index], train_cost, updates = train_updates, givens = {input_var: train_set_x[index * batch_size: (index + 1) * batch_size]})
-        
-        # functions for validation network
-        # val_updates is a dummy variable
-        forward = theano.function([input_var], target_var)
-        
-        val_cost, val_updates = definition.get_cost_updates(network = network, input_var = input_var, output = target_var, learning_rate = learning_rate)
-        validation = theano.function([index], val_cost, givens = {input_var: val_set_x[index * batch_size: (index + 1) * batch_size]})
+    # functions for train network
+    train_cost, train_updates = definition.get_cost_updates(network = network, input_var = input_var, output = layers.get_output(network), learning_rate = learning_rate,)
+    
+    train = theano.function([index], train_cost, updates = train_updates, givens = {input_var: train_set_x[index * batch_size: (index + 1) * batch_size]})
+    
+    # functions for validation network
+    # val_updates is a dummy variable
+    #forward = theano.compile.function.function([input_var], target_var)
+    #print(target_var)
+    #print(type(target_var))
+    #forward = theano.function(inputs = [input_var], outputs = target_var, on_unused_input = 'ignore')
+    forward = theano.function(inputs = [input_var], outputs = layers.get_output(network))
+    
+    val_cost, val_updates = definition.get_cost_updates(network = network, input_var = input_var, output = layers.get_output(network), learning_rate = learning_rate)
+    validation = theano.function([index], val_cost, givens = {input_var: val_set_x[index * batch_size: (index + 1) * batch_size]})
     
     
     # loading model
@@ -131,7 +135,9 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
         for epoch in range(start_epoch, n_epochs):
              
             costs = []
-            for batch_index in range(n_train_batches):
+            print(n_train_batches)
+            for batch_index in range(int(n_train_batches)):
+                print(train)
                 costs.append(train(batch_index))
     
             print(train_loss_file, "%d, %f" % (epoch, np.mean(costs)))        
@@ -142,7 +148,7 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
             # validation
             if (epoch % val_iter == 1):
                 costs = []
-                for batch_index in range(n_val_batches):
+                for batch_index in range(int(n_val_batches)):
                     costs.append(validation(batch_index))
                 
                 print(val_losss_file, "%d %f" % (epoch, np.mean(costs)))
@@ -198,53 +204,11 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
 if __name__ == '__main__':
     if (len(sys.argv) <= 1):
         sys.exit("Usage: convae.py <definition_file_name> [<model_name>]")
-    
+
     test_convae(
         batch_size = 100,
         load_model_name = '',
         info_iter = 20,
         val_iter = 10,
         save_iter = 100,
-)   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
+    )

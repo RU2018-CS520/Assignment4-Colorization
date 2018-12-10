@@ -131,8 +131,7 @@ def define_model(input_var, **kwargs):
         shape = input_var.shape
     )
     
-    return (output, layers.get_output(output))
-
+    return output
 
 def get_cost_updates(network, input_var, output, learning_rate, **kwargs):
     """ 
@@ -163,6 +162,9 @@ def get_cost_updates(network, input_var, output, learning_rate, **kwargs):
     # losses = losses + 0.2 * saturation
 
     cost = T.mean(losses)
+    print(losses)
+    print(cost)
+    print(params)
     gradients = T.grad(cost, params)
 
     # stochastic gradient descent

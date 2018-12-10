@@ -11,7 +11,7 @@ from lasagne import layers
 import theano.tensor as T
 from our_utils import get_greyscale
 
-class Unpool2DLayer(layers.Layer):
+class Unpool2DLayer(lasagne.layers.Layer):
     '''
     this layer performs unpooling over the last two dimensions of a 4D tensor
     '''
@@ -33,7 +33,7 @@ class Unpool2DLayer(layers.Layer):
         return self.nonlinearity(input.repeat(self.kernel_size, axis = 2).repeat(self.kernel_size, axis = 3))
 
 
-class GreyscaleLayer(layers.Layer):
+class GreyscaleLayer(lasagne.layers.Layer):
     '''
     this layer calculates the greyscale of the input image
     '''

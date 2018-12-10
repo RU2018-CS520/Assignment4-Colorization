@@ -8,4 +8,6 @@ def unpickle(file):
 if __name__ == '__main__':
     filename = 'cifar-10-batches-py/data_batch_1'
     dict = unpickle(filename)
-    a = dict[b'labels']
+    for a in dict[b'data']:
+        print(a)
+        break
