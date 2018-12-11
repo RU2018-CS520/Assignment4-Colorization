@@ -137,7 +137,8 @@ def test_convae(batch_size = 100, n_epochs = 10000, save_iter = 50, info_iter = 
             costs = []
             print(n_train_batches)
             for batch_index in range(int(n_train_batches)):
-                print(train)
+                # I commented this cuz this outputs too many things
+                #print(train)
                 costs.append(train(batch_index))
     
             print(train_loss_file, "%d, %f" % (epoch, np.mean(costs)))        

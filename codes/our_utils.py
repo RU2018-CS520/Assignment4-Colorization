@@ -160,7 +160,7 @@ def save_model(network, epoch, model_name, learning_rate = 0.0, directory = 'mod
     if (not os.path.exists(directory)):
         os.makedirs(directory)
     
-    with open(file_path, 'w') as save_file:
+    with open(file_path, 'wb') as save_file:
         pickle.dump(obj = {'params': params, 'epoch': epoch, 'learning_rate': learning_rate, }, file = save_file, protocol = -1)
 
 
