@@ -1,7 +1,9 @@
 import os
 import PIL
+import pickle
 import random
 import theano
+import lasagne
 import numpy as np
 
 def save_image(arr, file_name = 'arr.png', path = 'pics'):
@@ -20,11 +22,11 @@ def get_grayscale_images(images, color = False):
     g = 0.587
     b = 0.114
 
-    len = images.shape
+    len = images.shape[0]
     h = images.shape[2]
     w = images.shape[3]
 
-    ret_images = r * images[0:len, 0, 0:h, 0:w] + g * images[0:len, 0, 0:h, 0:w]+ b * images[0:len, 0, 0:h, 0:w]
+    ret_images = r * images[0:len, 0:1, 0:h, 0:w] + g * images[0:len, 1:2, 0:h, 0:w]+ b * images[0:len, 2:3, 0:h, 0:w]
 
     if color == True:
         if isinstance(images, np.ndarray):
@@ -35,7 +37,7 @@ def get_grayscale_images(images, color = False):
 
 def save_model(network, iteration, model_name, learning_rate = 0.0, path = 'models'):
     # Save our model to pickle file
-    params = layers.get_all_param_values(network)
+    params = lasagne.layers.get_all_param_values(network)
     file_name = model_name + "-iter" + str(iteration) + ".pickle"
     file_path = path + '/' + file_name
     print("Saving model to: %s" % file_path)
@@ -52,14 +54,14 @@ def load_model(network, file_name, path = 'models'):
 
     with open(file_path, 'rb') as file:
         dict = pickle.load(file)
-        layers.set_all_param_values(network, dict[b'params'])
+        lasagne.layers.set_all_param_values(network, dict[b'params'])
     return {'iteration': dict[b'iteration'], 'learning_rate': dict[b'learning_rate']}
 
 def plot_sample(images, mapping, model_name, iteration, images_per_row = 5, path = 'pics'):
     # Plot images to file
     # image can be np.ndarray or PIL.Image
     # mapping is a theano function which produces outputs from images
-    file_path = path + '/' + model_name
+    file_path = path + '/sample_' + model_name
     if not os.path.exists(file_path):
         os.makedirs(file_path)
 
@@ -73,17 +75,53 @@ def plot_sample(images, mapping, model_name, iteration, images_per_row = 5, path
     gray_images = get_grayscale_images(images, color = True)
     output_images = mapping(images)
     sample_images = np.array([]).reshape((0,) + images.shape[1:])
+    #print(images.shape)
+    #print(gray_images.shape)
+    #print(output_images.shape)
+    #print(sample_images.shape)
 
     for i in range(len):
         sample_images = np.concatenate([sample_images, images[i:i+1]], axis = 0)
         sample_images = np.concatenate([sample_images, gray_images[i:i+1]], axis = 0)
         sample_images = np.concatenate([sample_images, output_images[i:i+1]], axis = 0)
 
+    R = sample_images[:, 0, :, :]
+    G = sample_images[:, 1, :, :]
+    B = sample_images[:, 2, :, :]
+
     sample_images = reshape_images_for_output((R, G, B, None), image_shape = (height, width), tile_shape = (len // images_per_row, 3 * images_per_row), tile_gap = (1, 1))
 
-    img = Image.fromarray(sample_images)
+    img = PIL.Image.fromarray(sample_images)
     img_name = ('Iteration %d.png' % iteration)
     img.save(file_path + '/' + img_name)
+    print('Saving images to %s' % file_path + '/' + img_name)
+
+def plot_filter(filters, model_name, iteration, filter_per_row = 5, repeat = 5, path = 'pics'):
+    file_path = path + '/filter_' + model_name
+    if not os.path.exists(file_path):
+        os.makedirs(file_path)
+
+    len = min(filters.shape[0], 100)
+
+    filters = filters[0:len]
+    filters = filters.repeat(repeat, axis = 2).repeat(repeat, axis = 3)
+
+    if filters.shape[1] == 3:
+        R = filters[:, 0, :, :]
+        G = filters[:, 1, :, :]
+        B = filters[:, 2, :, :]
+    else:
+        R = filters[:, 0, :, :]
+        G = R
+        B = R
+
+    filters = reshape_images_for_output((R, G, B, None), image_shape = filters.shape[2:], tile_shape = (filters.shape[0] // filter_per_row, filter_per_row), tile_gap = (1, 1))
+
+    img = PIL.Image.fromarray(filters)
+    img_name = ('Iteration %d.png' % iteration)
+    img.save(file_path + '/' + img_name)
+    print('Saving filters to %s' % file_path + '/' + img_name)
+
 
 def reshape_images_for_output(images, image_shape, tile_shape, tile_gap = (1, 1)):
     # Reshape images to human-friendly format
@@ -91,4 +129,63 @@ def reshape_images_for_output(images, image_shape, tile_shape, tile_gap = (1, 1)
     output_shape = [(i + k) * j - k for i, j, k in zip(image_shape, tile_shape, tile_gap)]
 
     if isinstance(images, tuple):
+        ret_images = np.zeros((output_shape[0], output_shape[1], 4), dtype = 'uint8')
+        channels = [0, 0, 0, 255]
+        for i in range(4):
+            if images[i] is None:
+                ret_images[:, :, i] = np.zeros(output_shape, dtype = 'uint8') + channels[i]
+            else:
+                ret_images[:, :, i] = reshape_images_for_output(images[i], image_shape, tile_shape, tile_gap)
+    else:
+        ret_images = np.zeros(output_shape, dtype = 'uint8')
+        for i in range(tile_shape[0]):
+            for j in range(tile_shape[1]):
+                img = images[i * tile_shape[1] + j]
+                # Scale it to be within [0, 1]
+                img -= img.min()
+                img = (1.0 * img) / img.max()
+                img *= 255
+                # Reshape
+                img = img.reshape(image_shape)
+                # Add to ret_image 
+                u = i * (image_shape[0] + tile_gap[0])
+                d = i * (image_shape[0] + tile_gap[0]) + image_shape[0]
+                l = j * (image_shape[1] + tile_gap[1])
+                r = j * (image_shape[1] + tile_gap[1]) + image_shape[1]
+                ret_images[u:d, l:r] = img
+    return ret_images
 
+def load_train_dataset():
+    train_dataset_x = []
+    train_dataset_y = np.array([])
+
+    for i in range(1, 6):
+        file_name = 'cifar-10-batches-py/data_batch_' + str(i)
+        print('Importing dataset from ' +  file_name)
+        file = open(file_name, 'rb')
+        dict = pickle.load(file, encoding='bytes')
+        file.close()
+
+        batch_images = dict[b'data']
+        batch_labels = dict[b'labels']
+
+        train_dataset_x.append(batch_images)
+        train_dataset_y = np.append(train_dataset_y, batch_labels)
+
+    train_dataset_x = np.vstack(train_dataset_x) / 256.0
+    train_dataset_x = train_dataset_x.reshape(train_dataset_x.shape[0], 3, 32, 32)
+
+    return (train_dataset_x, train_dataset_y)
+
+def load_validation_dataset():
+    file_name = 'cifar-10-batches-py/test_batch'
+    file = open(file_name, 'rb')
+    dict = pickle.load(file, encoding='bytes')
+    file.close()
+
+    val_images = dict[b'data'] / 256.0
+    val_labels = np.array(dict[b'labels'])
+
+    val_images = val_images.reshape(val_images.shape[0], 3, 32, 32)
+
+    return (val_images, val_labels)
