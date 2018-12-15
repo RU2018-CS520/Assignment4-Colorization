@@ -1,4 +1,5 @@
 import numpy as np
+import timeit
 
 import layer
 from frame import funcs
@@ -83,6 +84,64 @@ class net(object):
 		for layer in self.layerList:
 			layer.update(self.learnRate)
 		return
+
+
+	def epoch(self, X, Y):
+		lossList = []
+		for i in range(X):
+			dl, loss = self.getLoss(X[i], Y[i])
+			lossList.append(loss)
+			self.backward(dl)
+			self.update()
+		return np.mean(lossList)
+
+
+	def train(self, tX, tY, vX, vY, maxIter, patience):
+		maxPatience = patience
+		bestLoss = float('inf')
+		vLoss = float('inf')
+		print('********Start training********')
+		totalStart = timeit.default_timer()
+		for i in range(maxIter):
+			startTime = timeit.default_timer()
+			loss = self.epoch(tX, tY)
+			endTime = timeit.default_timer()
+			print('iter %i, mean loss: %.2f, for %.2fm' %(i, loss, (endTime - startTime)/60.))
+			
+			if loss < bestLoss:
+				bestLoss = loss
+				loss = self.epoch(vX, vY)
+				print('...validation loss: %.2f' %(loss))
+				if loss < vLoss:
+					vLoss = loss
+					patience = np.min(maxPatience, patience + i/2.)
+			else:
+				patience = patience - i
+
+			if patience < 0:
+				print('no more patience.')
+				break
+		else:
+			print('reach max iter.')
+
+		totalend = timeit.default_timer()
+		print('********Finish training********')
+		print('best training loss: %.2f, best validation loss: %.2f, for %.2fm' %(bestLoss, vLoss, (totalStart - totalend)/60.))
+		return
+
+
+	def test(self, X, Y):
+		loss = self.epoch(X, Y)
+		print('test loss: %.2f' %(loss))
+		return loss
+
+
+	def predict(self, X):
+		Y = []
+		for x in X:
+			Y.append(self.forward(x))
+		return Y
+
 
 
 
