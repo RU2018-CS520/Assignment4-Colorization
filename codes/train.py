@@ -12,7 +12,7 @@ from grayscale_layer import GrayscaleLayer
 
 lr = 0.0004
 lr_step = 15
-lr_coefficient = 0.87
+lr_coefficient = 0.8
 lr_mode = 'geometric'
 
 def build_cnn(input_var = None):
@@ -27,7 +27,7 @@ def build_cnn(input_var = None):
 
     conv2_filter_cnt = 50
     conv2_filter_size = 5
-    pool2_size = 2
+    maxpool2_size = 2
 
     dense_units_cnt = 3000
 
@@ -37,57 +37,67 @@ def build_cnn(input_var = None):
     after_conv1 = image_size
     after_pool1 = (after_conv1 + maxpool1_size - 1) // maxpool1_size
 
-    input = InputLayer(
+    l_in = InputLayer(
         shape = (None, 3, image_size, image_size),
         input_var = input_var,
     )
 
-    grayscale = GrayscaleLayer(incoming = input, )
+    l_in_grayscale = GrayscaleLayer(incoming = l_in, )
 
-    conv1 = Conv2DLayer(
-        incoming = grayscale,
+    print(lasagne.layers.get_output_shape(l_in_grayscale))
+
+    # size = 3 x 32 x 32
+    l_conv1 = Conv2DLayer(
+        incoming = l_in_grayscale,
         num_filters = conv1_filter_cnt,
         filter_size = conv1_filter_size,
         stride = 1,
         pad = 'same',
         nonlinearity = tanh,
     )
+    print(lasagne.layers.get_output_shape(l_conv1))
+    # size = 
 
-    maxpool1 = MaxPool2DLayer(
-        incoming = conv1,
+    l_maxpool1 = MaxPool2DLayer(
+        incoming = l_conv1,
         pool_size = maxpool1_size,
         stride = maxpool1_size,
     )
 
-    dense1 = DenseLayer(
-        incoming = maxpool1,
+    l_dense1 = DenseLayer(
+        incoming = l_maxpool1,
         num_units = dense_units_cnt,
         nonlinearity = tanh,
     )
 
-    dense1 = DropoutLayer(
-        incoming = dense1,
+    l_drop1 = DropoutLayer(
+        incoming = l_dense1,
         p = 0.3,
     )
 
-    pre_unpool1 = DenseLayer(
-        incoming = dense1,
+    l_pre_unpool1 = DenseLayer(
+        incoming = l_drop1,
         num_units = conv1_filter_cnt * (after_pool1 ** 2),
         nonlinearity = tanh,
     )
 
-    pre_unpool1 = ReshapeLayer(
-        incoming = pre_unpool1,
+    #l_drop2 = DropoutLayer(
+    #    incoming = l_pre_unpool1,
+    #    p = 0.3,
+    #)
+
+    l_pre_unpool1 = ReshapeLayer(
+        incoming = l_pre_unpool1,
         shape = (batch_size, conv1_filter_cnt) + (after_pool1, after_pool1),
     )
 
-    unpool1 = Unpool2DLayer(
-        incoming = pre_unpool1,
+    l_unpool1 = Unpool2DLayer(
+        incoming = l_pre_unpool1,
         kernel_size = maxpool1_size,
     )
 
-    deconv1 = Conv2DLayer(
-        incoming = unpool1,
+    l_deconv1 = Conv2DLayer(
+        incoming = l_unpool1,
         num_filters = 3,
         filter_size = conv1_filter_size,
         stride = 1,
@@ -95,12 +105,12 @@ def build_cnn(input_var = None):
         nonlinearity = tanh,
     )
 
-    output = ReshapeLayer(
-        incoming = deconv1,
+    l_out = ReshapeLayer(
+        incoming = l_deconv1,
         shape = input_var.shape
     )
 
-    return (output, lasagne.layers.get_output(output, deterministic = True))
+    return (l_out, lasagne.layers.get_output(l_out, deterministic = True))
 
 def get_loss_and_updates(network, input_var, prediction, learning_rate, **kwargs):
     # Get loss and updates 
@@ -112,8 +122,8 @@ def get_loss_and_updates(network, input_var, prediction, learning_rate, **kwargs
 
     output = (output + 1) / 2
     loss = theano.tensor.sum((input - output) ** 2, axis = 1)
-    regularization = theano.tensor.sum(theano.tensor.std(theano.tensor.reshape(output, (batch_size, 3, 1024)), axis = 1), axis = 1)
-    loss -= 0.01 * regularization
+    #regularization = theano.tensor.sum(theano.tensor.std(theano.tensor.reshape(output, (batch_size, 3, 1024)), axis = 1), axis = 1)
+    #loss += 0.01 * regularization
     loss = theano.tensor.mean(loss)
     gradients = theano.tensor.grad(loss, params)
 
@@ -229,7 +239,7 @@ def train(batch_size = 100, max_iterations = 500, load_model_name = None):
             # Plot sample and filter every 10 iterations
             if iteration % 10 == 1:
                 frame.plot_sample(
-                    images = theano.tensor.concatenate([train_dataset_x[100:175], validation_dataset_x[100:175]], axis = 0),
+                    images = validation_dataset_x[:500],
                     mapping = mapping,
                     model_name = 'cnn',
                     iteration = iteration,
