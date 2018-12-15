@@ -9,10 +9,11 @@ def pad(ix, iy, iz, padSize, iData):
 
 
 def setNpSeed(seed = 6983):
-	np.random.seed = seed
+	np.random.seed(seed)
 	return
 
 
 class lossFunc(object):
 	def norm2(o, y):
-		return np.square(o - y)
+		dl = o - y
+		return (dl, np.square(dl))
