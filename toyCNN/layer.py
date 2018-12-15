@@ -67,7 +67,7 @@ class conv(layer):
 				l = col * self.stepLen
 				r = l + self.kernelSize[1]
 
-				res[:, row, col] = np.sum(self.func(tData[:, t: b, l: r], kernel), axis = (1, 2))
+				res[:, row, col] = np.sum(self.func(tData[:, t: b, l: r], self.kernel), axis = (1, 2))
 
 		self.oData = res
 		return self.oData
@@ -79,7 +79,7 @@ class conv(layer):
 		ty = self.iy+2*self.padSize
 		res = np.empty((tz, self.oz, tx, ty), dtype = np.float16)
 
-		rKernel = np.transpose(self.kernel, (1, 0, 2, 3))
+		rKernel = np.transpose(self.kernel, (1, 2, 3, 0))
 
 		for row in range(self.ox):
 			t = row * self.stepLen
@@ -88,20 +88,20 @@ class conv(layer):
 				l = col * self.stepLen
 				r = l + self.kernelSize[1]
 
-				res[:, t: b, l: r] = loss[:, row, col] * rKernel
+				res[:, :, t: b, l: r] = np.transpose((loss[:, row, col] * rKernel), (0, 3, 1, 2))
 
-		if padSize == 0:
+		if self.padSize == 0:
 			self.loss = res
 		else:
-			self.loss = res[:, :, padSize: padSize+self.ix, padSize: padSize+self.iy]
+			self.loss = res[:, :, self.padSize: self.padSize+self.ix, self.padSize: self.padSize+self.iy]
 
 		res = np.sum(self.loss, axis = 1)
 		return res
 
 
 	def update(self, learnRate):
-		tData = tools.pad(self.ix, self.iy, self.iz, self.padSize, iData)
-		lossData = tData * self.loss
+		tData = tools.pad(self.ix, self.iy, self.iz, self.padSize, self.iData)
+		loss = np.transpose(self.loss, (1, 0, 2, 3))
 
 		res = np.zeros_like(self.kernel, dtype = np.float16)
 		for row in range(self.ox):
@@ -111,7 +111,7 @@ class conv(layer):
 				l = col * self.stepLen
 				r = l + self.kernelSize[1]
 
-				res = res + lossData(:, :, t: b, l: r)
+				res = res + tData[:, t: b, l: r] * loss
 
 		res = res / (self.ox * self.oy)
 		self.kernel = self.kernel - learnRate * res
@@ -148,8 +148,8 @@ class active(layer):
 
 
 	def backward(self, loss):
-		res = self.func.derivative(self.iData, self.oData, self.kernel)
-		self.loss = kernel * res
+		res = loss * self.func.derivative(self.iData, self.oData, self.kernel)
+		self.loss = self.kernel * res
 		return res
 
 
@@ -207,9 +207,8 @@ class pool(layer):
 				l = col * self.stepLen
 				r = l + self.kernelSize[1]
 
-				res[:, t: b, l: r] = self.func.derivative(self.iData[:, row, col], self.oData[:, row, col])
+				res[:, t: b, l: r] = loss[row, col] * self.func.derivative(self.iData[:, row, col], self.oData[:, row, col])
 
-		self.loss = res
 		return res
 
 
@@ -234,7 +233,7 @@ class fullC(layer):
 	def validCheck(self):
 		tx = 1
 		ty = 1
-		tz = kernelNum
+		tz = self.kernelNum
 		if self.ox != tx or self.oy != ty or self.oz != tz:
 			print('E: frame.layer.fullC: wrong active parameters')
 			exit()
@@ -254,5 +253,5 @@ class fullC(layer):
 		return res
 
 	def update(self, learnRate):
-		self.kernel = self.kernel - learnRate * self.loss * self.iData
+		self.kernel = self.kernel - learnRate * self.loss.transpose(1,0,2,3) * self.iData
 		return
