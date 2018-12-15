@@ -42,6 +42,8 @@ def buildNet(iSize, layerDescription, seedNum = None):
 		tx, ty, tz = ox, oy, oz
 	return layerList
 
+
+
 class net(object):
 	def __init__(self, layerList, learnRate = 0.003, lossFunc = tools.lossFunc.norm2):
 		self.layerList = layerList
@@ -69,13 +71,10 @@ class net(object):
 
 	def getLoss(self, x, y):
 		oData = self.forward(x)
-		self.loss = self.lossFunc(oData, y)
-		return self.loss
+		dl, self.loss = self.lossFunc(oData, y)
+		return dl, self.loss
 
 	def backward(self, loss):
-		if loss is None:
-			loss = self.loss
-
 		for layer in reversed(self.layerList):
 			loss = layer.backward(loss)
 		return loss
@@ -88,4 +87,19 @@ class net(object):
 
 
 if __name__ == '__main__':
-	pass
+	des = [('c', (2, 1, 2, (3,3)))]
+	ll = buildNet((3,3, 3), des, seedNum = 6983)
+	nn = net(ll, 1)
+	iData = np.random.rand(3, 3,3)
+	oData = nn.forward(iData)
+	# print(iData)
+	print(oData)
+	dl, loss = nn.getLoss(iData, 4)
+	print('')
+	# print(dl)
+	nn.backward(dl)
+	nn.update()
+	# print(nn.layerList[0].loss)
+	print('')
+	oData = nn.forward(iData)
+	print(oData)
