@@ -1,5 +1,30 @@
 import numpy as np
 
+'''
+class func(object):
+	#general func
+
+	#original func
+	def __call__(self, iData):
+		#in:
+		#np.ndarray iData with ndim = 3: input data point
+		#out:
+		#np.ndarray oData with ndim = 3: output data point
+
+		pass
+	
+	#d(func) / d(iData)
+	def derivative(self, iData, oData):
+		#in:
+		#np.ndarray iData with ndim = 3: input data point
+		#np.ndarray oData with ndim = 3: output data point
+		#out:
+		#np.ndarray df with shape = iData.shape: d(func) / d(iData)
+
+		pass
+'''
+
+#pool
 class max(object):
 	def __call__(self, iData):
 		return np.max(iData, axis = (1, 2), keepdims = True)
@@ -29,6 +54,7 @@ class mean(object):
 		return 'frame.actFunc: mean'
 
 
+#active
 class ReLU(object):
 	def __call__(self, iData, kernel):
 		return np.maximum(0, iData + kernel)
@@ -91,6 +117,7 @@ class tanh(object):
 		return 'frame.actFunc: tanh'
 
 
+#conv and fullC
 class weight(object):
 	def __call__(self, iData, kernel):
 		return np.sum(iData * kernel, axis = 1)
