@@ -26,9 +26,9 @@ class layer(object):
 	#forward input data
 	def forward(self, iData):
 		#in:
-		#np.ndarray x with ndim = 3: input data point
+		#np.ndarray iData with ndim = 3: input data point
 		#out:
-		#np.ndarray x with ndim = 3: output data point
+		#np.ndarray oData with ndim = 3: output data point
 		pass
 
 	#backward modified loss
