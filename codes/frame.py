@@ -54,8 +54,8 @@ def load_model(network, file_name, path = 'models'):
 
     with open(file_path, 'rb') as file:
         dict = pickle.load(file)
-        lasagne.layers.set_all_param_values(network, dict[b'params'])
-    return {'iteration': dict[b'iteration'], 'learning_rate': dict[b'learning_rate']}
+        lasagne.layers.set_all_param_values(network, dict['params'])
+    return {'iteration': dict['iteration'], 'learning_rate': dict['learning_rate']}
 
 def plot_sample(images, mapping, model_name, iteration, images_per_row = 5, path = 'pics'):
     # Plot images to file
@@ -89,7 +89,7 @@ def plot_sample(images, mapping, model_name, iteration, images_per_row = 5, path
     G = sample_images[:, 1, :, :]
     B = sample_images[:, 2, :, :]
 
-    sample_images = reshape_images_for_output((R, G, B, None), image_shape = (height, width), tile_shape = (len // images_per_row, 3 * images_per_row), tile_gap = (1, 1))
+    sample_images = reshape_images_for_output((R, G, B, None), image_shape = (height, width), tile_shape = (len // images_per_row, 3 * images_per_row), tile_gap = (2, 2))
 
     img = PIL.Image.fromarray(sample_images)
     img_name = ('Iteration %d.png' % iteration)
@@ -172,7 +172,7 @@ def load_train_dataset():
         train_dataset_x.append(batch_images)
         train_dataset_y = np.append(train_dataset_y, batch_labels)
 
-    train_dataset_x = np.vstack(train_dataset_x) / 256.0
+    train_dataset_x = np.vstack(train_dataset_x) / 255.0
     train_dataset_x = train_dataset_x.reshape(train_dataset_x.shape[0], 3, 32, 32)
 
     return (train_dataset_x, train_dataset_y)
@@ -183,7 +183,7 @@ def load_validation_dataset():
     dict = pickle.load(file, encoding='bytes')
     file.close()
 
-    val_images = dict[b'data'] / 256.0
+    val_images = dict[b'data'] / 255.0
     val_labels = np.array(dict[b'labels'])
 
     val_images = val_images.reshape(val_images.shape[0], 3, 32, 32)

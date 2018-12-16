@@ -203,7 +203,7 @@ def train(batch_size = 100, max_iterations = 500, load_model_name = None, load_m
     file_log_validation = open('logs/log_val.csv', 'w')
 
     # Training
-    print('Started training')
+    print ('Started training')
 
     try:
         for iteration in range(iteration_start, max_iterations):
