@@ -261,7 +261,7 @@ class pool(layer):
 				l = col * self.stepLen
 				r = l + self.kernelSize[1]
 
-				res[:, t: b, l: r] = loss[row, col] * self.func.derivative(self.iData[:, t: b, l: r], self.oData[:, row, col])
+				res[:, t: b, l: r] = loss[:, row, col] * self.func.derivative(self.iData[:, t: b, l: r], self.oData[:, row, col])
 
 		return res
 
