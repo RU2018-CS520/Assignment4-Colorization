@@ -46,7 +46,6 @@ def build_cnn(input_var = None):
 
     print(lasagne.layers.get_output_shape(l_in_grayscale))
 
-    # size = 3 x 32 x 32
     l_conv1 = Conv2DLayer(
         incoming = l_in_grayscale,
         num_filters = conv1_filter_cnt,
@@ -56,30 +55,33 @@ def build_cnn(input_var = None):
         nonlinearity = tanh,
     )
     print(lasagne.layers.get_output_shape(l_conv1))
-    # size = 
 
     l_maxpool1 = MaxPool2DLayer(
         incoming = l_conv1,
         pool_size = maxpool1_size,
         stride = maxpool1_size,
     )
+    print(lasagne.layers.get_output_shape(l_maxpool1))
 
     l_dense1 = DenseLayer(
         incoming = l_maxpool1,
         num_units = dense_units_cnt,
         nonlinearity = tanh,
     )
+    print(lasagne.layers.get_output_shape(l_dense1))
 
     l_drop1 = DropoutLayer(
         incoming = l_dense1,
         p = 0.3,
     )
+    print(lasagne.layers.get_output_shape(l_drop1))
 
     l_pre_unpool1 = DenseLayer(
         incoming = l_drop1,
         num_units = conv1_filter_cnt * (after_pool1 ** 2),
         nonlinearity = tanh,
     )
+    print(lasagne.layers.get_output_shape(l_pre_unpool1))
 
     #l_drop2 = DropoutLayer(
     #    incoming = l_pre_unpool1,
@@ -90,11 +92,13 @@ def build_cnn(input_var = None):
         incoming = l_pre_unpool1,
         shape = (batch_size, conv1_filter_cnt) + (after_pool1, after_pool1),
     )
+    print(lasagne.layers.get_output_shape(l_pre_unpool1))
 
     l_unpool1 = Unpool2DLayer(
         incoming = l_pre_unpool1,
         kernel_size = maxpool1_size,
     )
+    print(lasagne.layers.get_output_shape(l_unpool1))
 
     l_deconv1 = Conv2DLayer(
         incoming = l_unpool1,
@@ -104,11 +108,13 @@ def build_cnn(input_var = None):
         pad = 'same',
         nonlinearity = tanh,
     )
+    print(lasagne.layers.get_output_shape(l_deconv1))
 
     l_out = ReshapeLayer(
         incoming = l_deconv1,
         shape = input_var.shape
     )
+    print(lasagne.layers.get_output_shape(l_out))
 
     return (l_out, lasagne.layers.get_output(l_out, deterministic = True))
 
@@ -270,3 +276,4 @@ def train(batch_size = 100, max_iterations = 500, load_model_name = None, load_m
 
 if __name__ == '__main__':
     train(batch_size = 100, load_model_name = 'cnn-iter51.pickle', load_model_path = '/common/users/sl1560/temp')
+    #train(batch_size = 100, load_model_name = '', load_model_path = '')
