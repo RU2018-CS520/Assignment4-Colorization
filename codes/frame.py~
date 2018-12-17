@@ -88,9 +88,9 @@ def plot_sample(images, mapping, model_name, iteration, images_per_row = 5, path
         sample_images = np.concatenate([sample_images, gray_images[i:i+1]], axis = 0)
         sample_images = np.concatenate([sample_images, output_images[i:i+1]], axis = 0)
 
-    R = sample_images[:, 0, :, :]
+    R = sample_images[:, 2, :, :]
     G = sample_images[:, 1, :, :]
-    B = sample_images[:, 2, :, :]
+    B = sample_images[:, 0, :, :]
 
     sample_images = reshape_images_for_output((R, G, B, None), image_shape = (height, width), tile_shape = (len // images_per_row, 3 * images_per_row), tile_gap = (2, 2))
 
