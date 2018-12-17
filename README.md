@@ -1,36 +1,33 @@
 # Assignment4-Colorization
 
-#### Description
-{**When you're done, you can delete the content in this README and update the file with details for others getting started with your repository**}
+#### Description  
+This is the git repository for **Assignment 4 - Colorization**. We mainly code in Python in this project.
 
-#### Software Architecture
-Software architecture description
-
-#### Installation
-
-1. xxxx
-2. xxxx
-3. xxxx
-
-#### Instructions
-
-1. xxxx
-2. xxxx
-3. xxxx
-
-#### Contribution
-
-1. Fork the project
-2. Create Feat_xxx branch
-3. Commit your code
-4. Create Pull Request
-
-
-#### Gitee Feature
-
-1. You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
-2. Gitee blog [blog.gitee.com](https://blog.gitee.com)
-3. Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
-4. The most valuable open source project [GVP](https://gitee.com/gvp)
-5. The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
-6. The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+#### File Structure  
+```
+.
+├── codes			#codes of this project
+│   ├── data			#images that never been trained before
+│   ├── frame.py
+│   ├── get_output.py
+│   ├── grayscale_layer.py
+│   ├── i2a.py
+│   ├── logs			#the loss log of our training process
+│   ├── pics
+│   ├── train.py		#the main training program
+│   └── unpool_layer.py
+├── docs
+│   ├── figs			#figures that have been used in the report
+│   ├── report.pdf		#report
+│   └── report.tex		#latex source code of the report
+├── README.md
+└── toyCNN			#our implementation of CNN
+    ├── docs			#docs of our CNN
+    │   ├── HowToBuildACNN.html
+    │   └── Usage.html
+    ├── frame
+    │   ├── funcs.py
+    │   └── tools.py
+    ├── layer.py
+    └── network.py
+```

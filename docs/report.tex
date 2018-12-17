@@ -106,7 +106,7 @@ In this group project, we implemented a image colorizer which can generate satis
 			enough information in a single gray value to reconstruct the correct color (usually).}
 		\par{Every image of the input is a $ 3 \times 32 \times 32 $ numpy array -- RGB values of every pixel. Each RGB value is between [0, 255]. We will first pre-process the data, get the grayscale of the images, standardize the value, make every image to be a $ 1 \times 32 \times 32 $ numpy array with values between [0, 1]. }
 		\par{Because we are using tanh as our activation function. So the ouput of the network is a $ 3 \times 32 \times 32 $ array with RGB channels and values between [-1, 1]. We scale it between [0, 1] and use this value to calculate the loss. If we are going to plot the results, we can simply multiply every value by 255.}
-		\par{Because of the dense layers, each output $ 3 \times 1 \times 1 $ is related to the whole $ 1 \times 32 \times 32 $ input graph}
+		\par{Because of the dense layers, each output pixel whose space size is $ 3 \times 256 \times 1 \times 1 $ is maped from the whole input graph, whose space size is $ 1 \times 256 \times 32 \times 32 $}
 	\end{enumerate}
 	\item {\textbf{Data:}} 
 	\begin{enumerate}
@@ -156,7 +156,7 @@ In this group project, we implemented a image colorizer which can generate satis
 		\item{Representing the problem is one thing, but can you train your model in a computationally tractable manner?}
 		\par{It is actually quite easy to train our model because of the small size of the input. Generally, for each iteration, we would need to train for 40 seconds using a GTX 1070ti, for 25 seconds using a GTX 1080ti. We could achieve a good result in less than 100 iterations of training most of the time.}
 		\item{What algorithms did you draw on?}
-		\par{We are using Stochastic Gradient Descent algorithm with Nestrerov momentum, and we are using back propagation to update the gradient.}
+		\par{We are using Stochastic Gradient Descent algorithm with Nesterov momentum to accelerate the training process, and we are using back propagation to update the gradient.}
 		\item{How did you determine convergence?}
 		\par{We validate the model and print out the validation loss every 10 iterations. When the validation loss stabilizes and even starts to rise, we stop our training and call it a convergence.}
 		\item{How did you avoid overfitting?}
@@ -176,7 +176,7 @@ In this group project, we implemented a image colorizer which can generate satis
 			\caption{Some results}
 			\label{fig-5}
 		\end{figure}
-		\par{Our final model is satisfying as Fig \ref{fig-5} shows.}
+		\par{Our final model is satisfying as Fig \ref{fig-5} shows. For every three images, they are respectively `the original image' - `grayscale image' - `image colorized by our program'.}
 		\par{We use our validation dataset to calculate the validation loss. The validation loss of our final model achieved 20.928495, which is reasonable to us. }
 		\item {What is your program good at, and what could use improvement?}
 		\par{Our program is performing very good on colorizing animals and vehicles if they are not blue or red. When it comes to images with blue and red colors, our program could totally mess up.}
@@ -207,6 +207,9 @@ In this group project, we implemented a image colorizer which can generate satis
 		\item {What kind of models and approaches, potential improvements and fixes, might you consider if you had more
 			time and resources?}
 		\par{For the potential improvement, we are considering using larger pictures and larger dataset, to increase our model's generalization ability. Also, we are considering using deeper convolutional layers, which has been proven of having strong ability in image processing.}
+		\par{Another approach we have thought of is:
+			Using FFT to find the main texture direction, normalize all images so that the main texture direction becomes vertical or horizontal, because natural images usually have vertical or horizontal textures. Hence we can avoid being fooled by rotating input images.
+		}
 	\end{enumerate}
 \end{itemize}
 
